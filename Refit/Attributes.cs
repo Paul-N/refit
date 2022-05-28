@@ -5,6 +5,8 @@ namespace Refit
 {
     public abstract class HttpMethodAttribute : Attribute
     {
+        public HttpMethodAttribute() { }
+
         public HttpMethodAttribute(string path)
         {
             Path = path;
@@ -12,7 +14,7 @@ namespace Refit
 
         public abstract HttpMethod Method { get; }
 
-        public virtual string Path
+        public virtual string? Path
         {
             get;
             protected set;
@@ -25,6 +27,8 @@ namespace Refit
     [AttributeUsage(AttributeTargets.Method)]
     public class GetAttribute : HttpMethodAttribute
     {
+        public GetAttribute() { }
+
         public GetAttribute(string path) : base(path) { }
 
         public override HttpMethod Method
@@ -39,6 +43,8 @@ namespace Refit
     [AttributeUsage(AttributeTargets.Method)]
     public class PostAttribute : HttpMethodAttribute
     {
+        public PostAttribute() { }
+
         public PostAttribute(string path) : base(path) { }
 
         public override HttpMethod Method
@@ -53,6 +59,8 @@ namespace Refit
     [AttributeUsage(AttributeTargets.Method)]
     public class PutAttribute : HttpMethodAttribute
     {
+        public PutAttribute() { }
+
         public PutAttribute(string path) : base(path) { }
 
         public override HttpMethod Method
@@ -67,6 +75,8 @@ namespace Refit
     [AttributeUsage(AttributeTargets.Method)]
     public class DeleteAttribute : HttpMethodAttribute
     {
+        public DeleteAttribute() { }
+
         public DeleteAttribute(string path) : base(path) { }
 
         public override HttpMethod Method
@@ -81,6 +91,8 @@ namespace Refit
     [AttributeUsage(AttributeTargets.Method)]
     public class PatchAttribute : HttpMethodAttribute
     {
+        public PatchAttribute() { }
+
         public PatchAttribute(string path) : base(path) { }
 
         public override HttpMethod Method
@@ -95,6 +107,8 @@ namespace Refit
     [AttributeUsage(AttributeTargets.Method)]
     public class OptionsAttribute : HttpMethodAttribute
     {
+        public OptionsAttribute() { }
+
         public OptionsAttribute(string path) : base(path) { }
 
         public override HttpMethod Method
@@ -109,6 +123,8 @@ namespace Refit
     [AttributeUsage(AttributeTargets.Method)]
     public class HeadAttribute : HttpMethodAttribute
     {
+        public HeadAttribute() { }
+
         public HeadAttribute(string path) : base(path) { }
 
         public override HttpMethod Method
@@ -160,6 +176,18 @@ namespace Refit
         /// Encodes everything using the ContentSerializer in RefitSettings
         /// </summary>
         Serialized
+    }
+
+    /// <summary>
+    /// Overrides Url of the request
+    /// </summary>
+    /// <remarks>
+    /// Use this attribute to set Url directly via method parameter
+    /// </remarks>
+    [AttributeUsage(AttributeTargets.Parameter)]
+    public class UrlAttribute : Attribute
+    {
+        public UrlAttribute() { }
     }
 
     /// <summary>

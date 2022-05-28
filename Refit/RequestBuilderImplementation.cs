@@ -489,7 +489,13 @@ namespace Refit
                     ret.Content = multiPartContent;
                 }
 
-                var urlTarget = (basePath == "/" ? string.Empty : basePath) + restMethod.RelativePath;
+                var shouldUrlBeReplaced = restMethod.IndexOfUrlToReplaceParam.HasValue;
+                string urlTarget;
+
+                if(shouldUrlBeReplaced)
+                    urlTarget = paramList[restMethod.IndexOfUrlToReplaceParam!.Value].ToString()!;
+                else
+                    urlTarget = (basePath == "/" ? string.Empty : basePath) + restMethod.RelativePath;
                 var queryParamsToAdd = new List<KeyValuePair<string, string?>>();
                 var headersToAdd = new Dictionary<string, string?>(restMethod.Headers);
                 var propertiesToAdd = new Dictionary<string, object?>();
@@ -501,7 +507,7 @@ namespace Refit
                     var isParameterMappedToRequest = false;
                     var param = paramList[i];
                     // if part of REST resource URL, substitute it in
-                    if (restMethod.ParameterMap.ContainsKey(i))
+                    if (restMethod.ParameterMap.ContainsKey(i) && !shouldUrlBeReplaced)
                     {
                         parameterInfo = restMethod.ParameterMap[i];
                         if (parameterInfo.IsObjectPropertyParameter)

@@ -280,6 +280,19 @@ namespace Refit.Tests
         public string Url { get; set; }
     }
 
+    public class UrlAttrDemoResponce
+    {
+        public int Int { get; set; }
+
+        public string Str { get; set; }
+    }
+
+    public interface IUrlAttrDemo
+    {
+        [Get()]
+        Task<UrlAttrDemoResponce> GetByUrlAsync([Url] string url);
+    }
+
     public class RestServiceIntegrationTests
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -293,6 +306,35 @@ namespace Refit.Tests
         }
 #endif
 
+        [Fact]
+        public async Task TestUrlAttrDemo()
+        {
+            var mockHttp = new MockHttpMessageHandler();
+
+            var settings = new RefitSettings
+            {
+                HttpMessageHandlerFactory = () => mockHttp,
+                ContentSerializer = new NewtonsoftJsonContentSerializer(new JsonSerializerSettings() { ContractResolver = new SnakeCasePropertyNamesContractResolver() })
+            };
+
+            var url = "https://api.github.com/users/octocat";
+
+            var str = "octocat";
+            var @int = 42;
+
+            mockHttp.Expect(HttpMethod.Get, url)
+                    .Respond("application/json", $"{{ 'Str':'{str}', 'Int':'{@int}' }}");
+
+
+            var fixture = RestService.For<IUrlAttrDemo>("https://api.github.com", settings);
+
+            var result = await fixture.GetByUrlAsync(url);
+
+            Assert.Equal(str, result.Str);
+            Assert.Equal(@int, result.Int);
+
+            mockHttp.VerifyNoOutstandingExpectation();
+        }
 
         [Fact]
         public async Task CanAddContentHeadersToPostWithoutBody()

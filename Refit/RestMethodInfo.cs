@@ -38,6 +38,7 @@ namespace Refit
         public RefitSettings RefitSettings { get; set; }
         public bool IsApiResponse { get; }
         public bool ShouldDisposeResponse { get; private set; }
+        public int? IndexOfUrlToReplaceParam { get; private set; }
 
         static readonly Regex ParameterRegex = new(@"{(.*?)}");
         static readonly HttpMethod PatchMethod = new("PATCH");
@@ -76,6 +77,7 @@ namespace Refit
             ParameterMap = BuildParameterMap(RelativePath, parameterList);
             BodyParameterInfo = FindBodyParameter(parameterList, IsMultipart, hma.Method);
             AuthorizeParameterInfo = FindAuthorizationParameter(parameterList);
+            IndexOfUrlToReplaceParam = FindIndexOfUrlToReplaceParam(parameterList);
 
             Headers = ParseHeaders(methodInfo);
             HeaderParameterMap = BuildHeaderParameterMap(parameterList);
@@ -193,7 +195,7 @@ namespace Refit
 
         static void VerifyUrlPathIsSane(string relativePath)
         {
-            if (relativePath == "")
+            if (string.IsNullOrEmpty(relativePath))
                 return;
 
             if (!relativePath.StartsWith("/"))
@@ -205,11 +207,11 @@ namespace Refit
             var ret = new Dictionary<int, RestMethodParameterInfo>();
 
             // This section handles pattern matching in the URL. We also need it to add parameter key/values for any attribute with a [Query]
-            var parameterizedParts = relativePath.Split('/', '?')
+            var parameterizedParts = relativePath?.Split('/', '?')
                 .SelectMany(x => ParameterRegex.Matches(x).Cast<Match>())
                 .ToList();
 
-            if (parameterizedParts.Count > 0)
+            if (parameterizedParts?.Count > 0)
             {
                 var paramValidationDict = parameterInfo.ToDictionary(k => GetUrlNameForParameter(k).ToLowerInvariant(), v => v);
                 //if the param is an lets make a dictionary for all it's potential parameters
@@ -400,6 +402,27 @@ namespace Refit
             {
                 var ret = authorizeParams[0];
                 return Tuple.Create(ret.AuthorizeAttribute!.Scheme, parameterList.IndexOf(ret.Parameter));
+            }
+
+            return null;
+        }
+
+
+        static int? FindIndexOfUrlToReplaceParam(List<ParameterInfo> parameterList)
+        {
+            var authorizeParams = parameterList
+                .Select((x, i) => new { Index = i, UrlAttribute = x.GetCustomAttributes(true).OfType<UrlAttribute>().FirstOrDefault() })
+                .Where(x => x.UrlAttribute != null)
+                .ToList();
+
+            if (authorizeParams.Count > 1)
+            {
+                throw new ArgumentException($"Only one parameter can be an {nameof(UrlAttribute)} parameter");
+            }
+
+            if (authorizeParams.Count == 1)
+            {
+                return authorizeParams[0].Index;
             }
 
             return null;
